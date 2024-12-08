@@ -1,0 +1,59 @@
+version: "3.8"
+services:
+
+
+  sql_server:
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=tEST1234
+      - MSSQL_PID=Developer
+      # - NAME=TEST01
+    platform: linux/amd64
+    
+    ports: 
+      - 1433:1433
+
+  atl_data:
+    build: 
+      context: .
+      dockerfile: dockerfile
+    command: sh -c "sleep 10s ; python ./extract_atl_data.py"
+    depends_on:
+      - sql_server
+    volumes:
+      - ./utilities:/hello_world_api/utilities
+      - ./dev_test_data:/hello_world_api/dev_test_data
+
+  fastapi:
+
+    build:
+      context: .
+      dockerfile: ./backend/Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      # - .:/backend
+      - ./utilities:/backend/backend/utilities
+
+    environment:
+      - APP_ENV=development
+    depends_on:
+      atl_data:
+        condition: service_completed_successfully
+
+
+  frontend:
+    build:
+      context: .
+      dockerfile: ./frontend/Dockerfile
+
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/frontend
+      - /frontend/node_modules
+    # command: ["npm", "start"]
+    # depends_on:
+      # fastapi:
+        # condition: service_completed_successfully

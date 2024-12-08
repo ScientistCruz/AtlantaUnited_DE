@@ -1,0 +1,12 @@
+# Dockerfile, Image, Container
+
+FROM python:3.12
+
+WORKDIR /hello_world_api
+
+RUN apk update
+RUN apk add gcc libc-dev g++ libffi-dev libxml2 unixodbc-dev mariadb-dev postgresql-dev
+
+COPY requirements.txt .
+COPY . .
+RUN pip install -r requirements.txt
